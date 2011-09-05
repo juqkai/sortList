@@ -1,0 +1,79 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" charset="utf-8">
+		<link rel="Stylesheet" style="text/css" href="sortList.css"></link>
+		<script type="text/javascript" src="jquery-1.4.4.js"></script>
+		<script type="text/javascript" src="sortList.js"></script>
+		<script type="text/javascript" src="hanzi_goto_pinyin.js"></script>
+		<script type="text/javascript" src="blackbirdjs/blackbird.js"></script>
+		<link type="text/css" rel="Stylesheet" href="blackbirdjs/blackbird.css" />
+		<script type="text/javascript">
+			$(function(){
+				var item = [
+					{id:'zk',name:'我'},
+					{id:'fl',name:'是'},
+					{id:'3',name:'一'}
+				];
+				var item_1 = {'1':'工','2':'了','3':'以'}; 
+				var conf = {
+					arrays: item
+					//items: item_1
+					,textField: 'name'
+					,valField: 'id'
+					,selectClose: true
+				};
+				$("#test").SortList(conf);
+				
+				
+				var item2 = [
+					{id:'zk',name:'经'}
+					,{id:'fl',name:'工'}
+					,{id:'3',name:'了'}
+					,{id:'4',name:'以'}
+					,{id:'5',name:'大'}
+					,{id:'6',name:'有'}
+					,{id:'7',name:'地'}
+					,{id:'8',name:'一'}
+					,{id:'9',name:'上'}
+					,{id:'10',name:'不'}
+					,{id:'11',name:'是'}
+					,{id:'12',name:'中'}
+					,{id:'13',name:'国'}
+					,{id:'14',name:'同'}
+					,{id:'15',name:'民'}
+					,{id:'16',name:'为'}
+				];
+				var item_2 = {'1':'工','2':'了','3':'以','4':'在','5':'有','6':'地'}; 
+				var conf2 = {
+						arrays: item2
+						//items: item_2
+						,textField: 'name'
+						,valField: 'id'
+						,name:'tests'
+						,single: false
+						,multiHandle: handle
+						,style:{
+							top: "155px"
+							,left: "500px"
+						}
+				};
+				$("#select").SortList(conf2);
+				
+			});
+			function handle(items){
+				$("#tests").empty();
+				for(var key in items){
+					$("#tests").append("<span>id:"+key+"val:"+items[key]+"</span>&nbsp;||&nbsp;");
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div>
+			<input type="text" id="test" name="test" />
+		</div>
+		<div  id="tests">
+		</div>
+		<a href="javascript:void(0);" id="select">选择</a>
+	</body>
+</html>

@@ -1,9 +1,11 @@
+
 (function($){
 	$.juqkai = $.juqkai || {varsion:'0.1'};
 	
 	$.juqkai.SortList = {
 		conf: {
 			name:""			//提交时的名字
+			,isSort: true		//是否排序
 			,items: {}			//要显示的数据,默认类型为{val:text,val:text},请保存val唯一
 			,arrays:[]			//数据数组
 			,valField:"val"		//数组模式下取那个字段的值做为'值'
@@ -14,9 +16,9 @@
 			,ajaxSingle: true	//ajax请求次数
 			//,dest:{}			//操作对象
 			,single:true		//模式选择,true为单选模式,false为多选模式
-			,selectClose:false	//在单选模式下是否选中就关闭面板
-			,selectItems:{}		//多选模式下,被选中的数据
-			,multiHandle:function(selectItems){}		//多选处理器,当使用多选模式,点击确定后,会将选中的项通过这个回调函数进行处理,其中selectItems为被选中的数据,键值对
+			,selectClose:true	//在单选模式下是否选中就关闭面板
+			,selectItems:{}		//多选模式下,被选中的数据,键值对
+			,handle:function(selectItems){}		//多选处理器,当使用多选模式,点击确定后,会将选中的项通过这个回调函数进行处理,其中selectItems为被选中的数据,键值对
 			,style:{									//样式
 				title:"字母排序列表"						//sortList面板的title信息
 				,top:"100px"							//top
@@ -41,6 +43,8 @@
 				//解决IE中不能使用min-width的BUG
 				var minwidth = $('<span id="sortList_min_width"></span>');
 				content.append(minwidth);
+				var notsort = $('<span id="sortList_content_notsort"></span>');
+				content.append(notsort);
 				content.append(makeList("c_m_"));
 				var menu = $('<div id="sortList_menu"></div>');
 				
@@ -62,6 +66,7 @@
 				sortlist.append(title);
 				sortlist.append(main);
 				sortlist.append(sbtn);
+				
 				$("body").append(sortlist);
 				
 				var sort = this;
@@ -72,6 +77,7 @@
 				sort.tag.main = main;
 				sort.tag.content = content;
 				sort.tag.minwidth = minwidth;
+				sort.tag.notsort = notsort;
 				sort.tag.menu = menu;
 				sort.tag.sitem = sitem;
 				sort.tag.sbtn = sbtn;
@@ -172,9 +178,14 @@
 					if(!val || !text){
 						continue;
 					}
-					var py = makePy(text.charAt(0))[0];
-					
 					var item = $("<div id='sort_item_"+val+"' class='sort_item'>"+text+"</div>");
+					if(!conf.isSort){
+						var notsort = sort.tag.notsort;
+						notsort.append(item);
+						notsort.show();
+						continue;
+					}
+					var py = makePy(text.charAt(0))[0];
 					var li = $("#c_m_" + py);
 					li.append(item);
 					li.show();
@@ -209,6 +220,9 @@
 					if(conf.selectClose){
 						sort.hideSortList();
 					}
+					conf.selectItems = {};
+					conf.selectItems[val] = text;
+					conf.handle(conf.selectItems);
 				});
 			},
 			clearSingleModel: function(){
@@ -254,7 +268,7 @@
 			OkBtn: function(){
 				var sort = this;
 				if(!conf.isSingle){
-					conf.multiHandle(conf.selectItems);
+					conf.handle(conf.selectItems);
 				}
 				sort.hideSortList();
 			},
@@ -297,6 +311,7 @@
 		//设置提交名 
 		if(!conf.name || conf.name == ""){
 			if(!conf.dest.attr("name")){
+				conf.dest.after("<span>请设置控件的name属性!</span>");
 				conf.dest.val("请设置控件的name属性!");
 				return;
 			}
@@ -308,9 +323,6 @@
 		
 		$.extend(self,{
 			ajaxRequest:function(){
-				if(!conf.isAjax){
-					return;
-				}
 				if(conf.ajaxSingle){
 					conf.isAjax = false;
 				}
@@ -319,15 +331,17 @@
 				
 				$.ajax({
 					url:url,
+					async: false,
 					dataType:"json",
 					type: "get",
 					success:function(e){
-						e = evel("("+e+")");
+						//e = eval("("+e+")");
 						if(conf.ajaxType == 0){
 							conf.items = e; 
 						}else {
 							conf.arrays = e;
 						}
+						self.dataConver();
 					}
 				});
 			},
@@ -345,17 +359,21 @@
 					//好TMD神奇,使用下面的方式来初始化items,就会出现多个数据乱串的问题,使用临时变量就不会...真TMD的遇到了
 //					conf.items[val] = text;
 				}
+				conf.items = items;
 				conf.arrays = [];
 				return items;
 			},
 			//取得数据
 			fetchData : function(){
-				//ajax请求
-				self.ajaxRequest();
+				if(conf.isAjax){
+					//ajax请求
+					self.ajaxRequest();
+					return;
+				}
 				//转换数据
-				var items = self.dataConver();
-				conf.items = items;
-				//self.dataConver();
+				self.dataConver();
+//				var items = self.dataConver();
+//				conf.items = items;
 			},
 			//目标控件事件
 			destEvent: function(){
@@ -391,8 +409,14 @@
 	
 	$.fn.SortList = function(conf){
 		//设置属性
+		var el = $(this).data("sortList");
+		if(el){
+			$(this).unbind("click");
+			$(this).removeData("sortList");
+		}
 		conf = $.extend({dest:$(this)}, $.juqkai.SortList.conf, conf);
 		var sl = new SortList(conf);
+		$(this).data("sortList", sl);
 		return sl;
 	};
 })(jQuery);

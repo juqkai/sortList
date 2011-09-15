@@ -18,11 +18,11 @@
 			,single:true		//模式选择,true为单选模式,false为多选模式
 			,selectClose:true	//在单选模式下是否选中就关闭面板
 			,selectItems:{}		//多选模式下,被选中的数据,键值对
+			,title:"字母排序列表"				//sortList面板的title信息
 			,handle:function(selectItems){}		//多选处理器,当使用多选模式,点击确定后,会将选中的项通过这个回调函数进行处理,其中selectItems为被选中的数据,键值对
 			,style:{									//样式
-				title:"字母排序列表"						//sortList面板的title信息
-				,top:"100px"							//top
-				,left:"100px"							//left
+				top:""							//top
+				,left:""							//left
 			}
 		}
 	};
@@ -157,10 +157,21 @@
 			baseConfig: function(){
 				var sort = this;
 				//表头信息
-				sort.tag.title.html(conf.style.title);
+				sort.tag.title.html(conf.title);
 				var sortlist = sort.tag.sortlist;
-				sortlist.css("top",conf.style.top);
-				sortlist.css("left",conf.style.left);
+				
+				var offset = conf.dest.offset();
+				if(conf.style.top == ""){
+					var height = conf.dest.outerHeight();
+					sortlist.css("top",offset.top + height);
+				} else {
+					sortlist.css("top",conf.style.top);
+				}
+				if(conf.style.top == ""){
+					sortlist.css("left",offset.left);
+				} else {
+					sortlist.css("left",conf.style.left);
+				}
 			},
 			//还原成初始状态
 			restore: function(){
@@ -169,6 +180,8 @@
 				sort.tag.content.find("div").remove();
 				var li = sort.tag.content.find("li").removeClass("sortList_content_hightLight");
 				li.hide();
+				var menu = sort.tag.menu;
+				menu.show();
 			},
 			//根据conf.items的值填充列表
 			fullSortList:function(){
@@ -183,6 +196,8 @@
 						var notsort = sort.tag.notsort;
 						notsort.append(item);
 						notsort.show();
+						var menu = sort.tag.menu;
+						menu.hide();
 						continue;
 					}
 					var py = makePy(text.charAt(0))[0];
@@ -267,9 +282,7 @@
 			},
 			OkBtn: function(){
 				var sort = this;
-				if(!conf.isSingle){
-					conf.handle(conf.selectItems);
-				}
+				conf.handle(conf.selectItems);
 				sort.hideSortList();
 			},
 			//多选模式下的清除
@@ -295,7 +308,7 @@
 			}
 			sr.init(conf);
 		}
-		return {init:me}
+		return {init:me};
 	}
 	
 	
@@ -351,17 +364,12 @@
 					return conf.items;
 				}
 				var arrays = conf.arrays;
-				var items = {};
 				for(var i in arrays){
 					var val = arrays[i][conf.valField];
 					var text = arrays[i][conf.textField];
-					items[val] = text;
-					//好TMD神奇,使用下面的方式来初始化items,就会出现多个数据乱串的问题,使用临时变量就不会...真TMD的遇到了
-//					conf.items[val] = text;
+					conf.items[val] = text;
 				}
-				conf.items = items;
 				conf.arrays = [];
-				return items;
 			},
 			//取得数据
 			fetchData : function(){
@@ -372,8 +380,6 @@
 				}
 				//转换数据
 				self.dataConver();
-//				var items = self.dataConver();
-//				conf.items = items;
 			},
 			//目标控件事件
 			destEvent: function(){
@@ -414,7 +420,7 @@
 			$(this).unbind("click");
 			$(this).removeData("sortList");
 		}
-		conf = $.extend({dest:$(this)}, $.juqkai.SortList.conf, conf);
+		conf = $.extend(true,{dest:$(this)}, $.juqkai.SortList.conf, conf);
 		var sl = new SortList(conf);
 		$(this).data("sortList", sl);
 		return sl;
